@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Puzzle Pages – Level 1</title>
+<style>
+body {
+  margin:0;
+  background:black;
+  color:white;
+  font-family:sans-serif;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+
+canvas { border:2px solid white; margin-top:20px }
+</style>
+</head>
+
+<body>
+
+<h1>Puzzle Pages – Level <span id="level">1</span></h1>
+<p>Eat fruit → door appears → go through door</p>
+
+<canvas id="game" width="400" height="400"></canvas>
+
+<script>
+const GRID = 20
+const SIZE = 20
+const canvas = document.getElementById("game")
+const ctx = canvas.getContext("2d")
+
+let snake, dir, fruit, door, level
+
+function randomPos(){
+  return {
+    x: Math.floor(Math.random()*GRID),
+    y: Math.floor(Math.random()*GRID)
+  }
+}
+
+function resetLevel(){
+  snake = [{x:10,y:10}]
+  dir = {x:1,y:0}
+  fruit = randomPos()
+  door = null
+}
+
+level = 1
+resetLevel()
+
+window.addEventListener("keydown", e=>{
+  if(e.key==="ArrowUp") dir={x:0,y:-1}
+  if(e.key==="ArrowDown") dir={x:0,y:1}
+  if(e.key==="ArrowLeft") dir={x:-1,y:0}
+  if(e.key==="ArrowRight") dir={x:1,y:0}
+})
+
+function nextLevel(){
+  level++
+  document.getElementById("level").innerText = level
+  resetLevel()
+}
+
+function loop(){
+  const head = {
+    x:(snake[0].x+dir.x+GRID)%GRID,
+    y:(snake[0].y+dir.y+GRID)%GRID
+  }
+
+  if(!door && head.x===fruit.x && head.y===fruit.y){
+    door = randomPos()
+  }
+
+  if(door && head.x===door.x && head.y===door.y){
+    nextLevel()
+    return
+  }
+
+  snake=[head,...snake.slice(0,-1)]
+
+  draw()
+}
+
+function draw(){
+  ctx.fillStyle="black"
+  ctx.fillRect(0,0,400,400)
+
+  ctx.fillStyle="lime"
+  snake.forEach(s=>ctx.fillRect(s.x*SIZE,s.y*SIZE,SIZE-2,SIZE-2))
+
+  ctx.fillStyle="red"
+  ctx.fillRect(fruit.x*SIZE,fruit.y*SIZE,SIZE-2,SIZE-2)
+
+  if(door){
+    ctx.fillStyle="cyan"
+    ctx.fillRect(door.x*SIZE,door.y*SIZE,SIZE-2,SIZE-2)
+  }
+}
+
+setInterval(loop,150)
+</script>
+
+</body>
+</html>
