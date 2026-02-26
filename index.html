@@ -74,9 +74,9 @@ function loop(){
   }
 
   if(door && head.x===door.x && head.y===door.y){
-    nextLevel()
-    return
-  }
+  window.location = "level2.html"
+  return
+}
 
   snake=[head,...snake.slice(0,-1)]
 
