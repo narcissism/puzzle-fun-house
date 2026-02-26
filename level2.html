@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Puzzle Pages – Level 2 Maze</title>
+<style>
+body{
+  margin:0;
+  background:black;
+  color:white;
+  font-family:sans-serif;
+  text-align:center;
+}
+canvas{border:2px solid white;margin-top:20px}
+</style>
+</head>
+<body>
+
+<h1>Puzzle Pages – Level 2</h1>
+<p>Find the fountain in the maze</p>
+
+<canvas id="maze" width="500" height="500"></canvas>
+
+<script>
+const SIZE = 20
+const COLS = 25
+const ROWS = 25
+const canvas = document.getElementById("maze")
+const ctx = canvas.getContext("2d")
+
+let maze=[]
+let player={x:1,y:1}
+let goal={x:Math.floor(COLS/2), y:Math.floor(ROWS/2)}
+let door=false
+
+// -------- MAZE GENERATOR (recursive backtracker) --------
+function generateMaze(){
+  maze = Array.from({length:ROWS},()=>Array(COLS).fill(1))
+
+  function carve(x,y){
+    const dirs=[[2,0],[-2,0],[0,2],[0,-2]].sort(()=>Math.random()-0.5)
+    for(const [dx,dy] of dirs){
+      let nx=x+dx, ny=y+dy
+      if(nx>0 && ny>0 && nx<COLS-1 && ny<ROWS-1 && maze[ny][nx]===1){
+        maze[ny][nx]=0
+        maze[y+dy/2][x+dx/2]=0
+        carve(nx,ny)
+      }
+    }
+  }
+
+  maze[1][1]=0
+  carve(1,1)
+}
+
+generateMaze()
+
+// controls
+window.addEventListener("keydown", e=>{
+  let nx=player.x, ny=player.y
+  if(e.key==="ArrowUp") ny--
+  if(e.key==="ArrowDown") ny++
+  if(e.key==="ArrowLeft") nx--
+  if(e.key==="ArrowRight") nx++
+
+  if(maze[ny][nx]===0){
+    player={x:nx,y:ny}
+  }
+
+  if(player.x===goal.x && player.y===goal.y){
+    door=true
+  }
+})
+
+// click door
+canvas.addEventListener("click", ()=>{
+  if(door){
+    window.location="index.html"
+  }
+})
+
+function draw(){
+  ctx.fillStyle="black"
+  ctx.fillRect(0,0,500,500)
+
+  // maze
+  for(let y=0;y<ROWS;y++){
+    for(let x=0;x<COLS;x++){
+      if(maze[y][x]===1){
+        ctx.fillStyle="white"
+        ctx.fillRect(x*SIZE,y*SIZE,SIZE,SIZE)
+      }
+    }
+  }
+
+  // goal
+  ctx.fillStyle=door?"cyan":"blue"
+  ctx.beginPath()
+  ctx.arc(goal.x*SIZE+SIZE/2,goal.y*SIZE+SIZE/2,8,0,Math.PI*2)
+  ctx.fill()
+
+  // player
+  ctx.fillStyle="lime"
+  ctx.beginPath()
+  ctx.arc(player.x*SIZE+SIZE/2,player.y*SIZE+SIZE/2,6,0,Math.PI*2)
+  ctx.fill()
+
+  requestAnimationFrame(draw)
+}
+
+draw()
+</script>
+
+</body>
+</html>
