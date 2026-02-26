@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Puzzle Pages – Level 3</title>
+<style>
+body{
+  margin:0;
+  background:#111;
+  color:white;
+  font-family:sans-serif;
+  text-align:center;
+}
+canvas{border:2px solid white;margin-top:20px}
+</style>
+</head>
+<body>
+
+<h1>Puzzle Pages – Level 3</h1>
+<p>Cook 13 burgers without burning them</p>
+<p>Burgers cooked: <span id="count">0</span>/13</p>
+
+<canvas id="game" width="800" height="500"></canvas>
+
+<script>
+const canvas = document.getElementById("game")
+const ctx = canvas.getContext("2d")
+
+let mouse={x:0,y:0}
+let dragging=null
+
+let chairOn=false
+let cordPlugged=false
+let burgerCount=0
+let door=false
+
+let burger=null
+
+canvas.addEventListener("mousemove",e=>{
+  const rect=canvas.getBoundingClientRect()
+  mouse.x=e.clientX-rect.left
+  mouse.y=e.clientY-rect.top
+})
+
+canvas.addEventListener("mousedown",()=>{
+  if(hit(cord)) dragging="cord"
+  if(hit(burgerObj)) dragging="burger"
+})
+
+canvas.addEventListener("mouseup",()=>{
+  if(dragging==="cord" && hit(outlet)){
+    cordPlugged=true
+    chairOn=true
+  }
+
+  if(dragging==="burger"){
+    if(hit(chair) && chairOn){
+      burger={x:chair.x,y:chair.y,cook:0}
+    }
+    if(hit(buns) && burger && burger.cook>40 && burger.cook<100){
+      burgerCount++
+      document.getElementById("count").innerText=burgerCount
+      burger=null
+      if(burgerCount>=13) door=true
+    }
+  }
+
+  dragging=null
+})
+
+function hit(obj){
+  return mouse.x>obj.x && mouse.x<obj.x+obj.w &&
+         mouse.y>obj.y && mouse.y<obj.y+obj.h
+}
+
+const chair={x:350,y:180,w:100,h:120}
+const outlet={x:700,y:100,w:40,h:40}
+const cord={x:200,y:200,w:60,h:20}
+const buns={x:550,y:350,w:120,h:60}
+const burgerObj={x:150,y:350,w:60,h:40}
+
+function drawChair(){
+  ctx.fillStyle=chairOn?"#ffcc00":"#444"
+  ctx.fillRect(chair.x,chair.y,chair.w,chair.h)
+  if(chairOn){
+    ctx.fillStyle="yellow"
+    ctx.fillText("BUZZ",chair.x+20,chair.y-10)
+  }
+}
+
+function drawOutlet(){
+  ctx.fillStyle="white"
+  ctx.fillRect(outlet.x,outlet.y,outlet.w,outlet.h)
+}
+
+function drawCord(){
+  ctx.fillStyle="gray"
+  ctx.fillRect(
+    dragging==="cord"?mouse.x:cord.x,
+    dragging==="cord"?mouse.y:cord.y,
+    cord.w,cord.h)
+}
+
+function drawBurger(){
+  if(dragging==="burger"){
+    ctx.fillStyle="pink"
+    ctx.fillRect(mouse.x,mouse.y,burgerObj.w,burgerObj.h)
+  }else{
+    ctx.fillStyle="pink"
+    ctx.fillRect(burgerObj.x,burgerObj.y,burgerObj.w,burgerObj.h)
+  }
+}
+
+function drawCookingBurger(){
+  if(!burger) return
+
+  burger.cook+=chairOn?0.5:0
+
+  let color="pink"
+  if(burger.cook>30) color="#cc6666"
+  if(burger.cook>60) color="#8b4513"
+  if(burger.cook>100) color="black"
+
+  ctx.fillStyle=color
+  ctx.fillRect(chair.x+20,chair.y+40,60,40)
+
+  if(burger.cook>120){
+    ctx.fillStyle="gray"
+    ctx.fillText("SMOKE",chair.x+10,chair.y+150)
+  }
+}
+
+function drawBuns(){
+  ctx.fillStyle="#f5c16c"
+  ctx.fillRect(buns.x,buns.y,buns.w,buns.h)
+}
+
+function drawDoor(){
+  if(!door) return
+  ctx.fillStyle="cyan"
+  ctx.fillRect(350,20,100,60)
+  ctx.fillStyle="black"
+  ctx.fillText("DOOR",380,55)
+}
+
+canvas.addEventListener("click",()=>{
+  if(door && mouse.x>350 && mouse.x<450 && mouse.y>20 && mouse.y<80){
+    window.location="level4.html"
+  }
+})
+
+function loop(){
+  ctx.fillStyle="#111"
+  ctx.fillRect(0,0,800,500)
+
+  drawChair()
+  drawOutlet()
+  drawCord()
+  drawBurger()
+  drawCookingBurger()
+  drawBuns()
+  drawDoor()
+
+  requestAnimationFrame(loop)
+}
+
+loop()
+</script>
+
+</body>
+</html>
