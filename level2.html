@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Puzzle Pages – Level 2 Maze</title>
+<title>Puzzle Pages – Level 2</title>
 <style>
 body{
   margin:0;
@@ -11,7 +11,10 @@ body{
   font-family:sans-serif;
   text-align:center;
 }
-canvas{border:2px solid white;margin-top:20px}
+canvas{
+  border:2px solid white;
+  margin-top:20px;
+}
 </style>
 </head>
 <body>
@@ -25,65 +28,85 @@ canvas{border:2px solid white;margin-top:20px}
 const SIZE = 20
 const COLS = 25
 const ROWS = 25
+
 const canvas = document.getElementById("maze")
 const ctx = canvas.getContext("2d")
 
-let maze=[]
-let player={x:1,y:1}
-let goal={x:Math.floor(COLS/2), y:Math.floor(ROWS/2)}
-let door=false
+// Load images
+const fountainImg = new Image()
+fountainImg.src = "fountain.png"
 
-// -------- MAZE GENERATOR (recursive backtracker) --------
+const doorImg = new Image()
+doorImg.src = "door.png"
+
+let maze = []
+let player = {x:1,y:1}
+let goal = {x:Math.floor(COLS/2), y:Math.floor(ROWS/2)}
+let door = false
+
+// -------- RANDOM MAZE GENERATOR --------
 function generateMaze(){
   maze = Array.from({length:ROWS},()=>Array(COLS).fill(1))
 
   function carve(x,y){
-    const dirs=[[2,0],[-2,0],[0,2],[0,-2]].sort(()=>Math.random()-0.5)
+    const dirs = [[2,0],[-2,0],[0,2],[0,-2]]
+      .sort(()=>Math.random()-0.5)
+
     for(const [dx,dy] of dirs){
-      let nx=x+dx, ny=y+dy
+      let nx = x+dx
+      let ny = y+dy
+
       if(nx>0 && ny>0 && nx<COLS-1 && ny<ROWS-1 && maze[ny][nx]===1){
-        maze[ny][nx]=0
-        maze[y+dy/2][x+dx/2]=0
+        maze[ny][nx] = 0
+        maze[y+dy/2][x+dx/2] = 0
         carve(nx,ny)
       }
     }
   }
 
-  maze[1][1]=0
+  maze[1][1] = 0
   carve(1,1)
+
+  // ensure center is open
+  maze[goal.y][goal.x] = 0
 }
 
 generateMaze()
 
-// controls
+// -------- CONTROLS --------
 window.addEventListener("keydown", e=>{
-  let nx=player.x, ny=player.y
+  let nx = player.x
+  let ny = player.y
+
   if(e.key==="ArrowUp") ny--
   if(e.key==="ArrowDown") ny++
   if(e.key==="ArrowLeft") nx--
   if(e.key==="ArrowRight") nx++
 
-  if(maze[ny][nx]===0){
-    player={x:nx,y:ny}
+  if(nx>=0 && ny>=0 && nx<COLS && ny<ROWS && maze[ny][nx]===0){
+    player = {x:nx,y:ny}
   }
 
-  if(player.x===goal.x && player.y===goal.y){
-    door=true
+  // Trigger door when next to fountain
+  const dist = Math.abs(player.x-goal.x) + Math.abs(player.y-goal.y)
+  if(dist <= 1){
+    door = true
   }
 })
 
-// click door
+// -------- CLICK DOOR --------
 canvas.addEventListener("click", ()=>{
   if(door){
-    window.location="level3.html"
+    window.location = "level3.html"
   }
 })
 
+// -------- DRAW LOOP --------
 function draw(){
   ctx.fillStyle="black"
   ctx.fillRect(0,0,500,500)
 
-  // maze
+  // draw maze walls
   for(let y=0;y<ROWS;y++){
     for(let x=0;x<COLS;x++){
       if(maze[y][x]===1){
@@ -93,16 +116,21 @@ function draw(){
     }
   }
 
-  // goal
-  ctx.fillStyle=door?"cyan":"blue"
-  ctx.beginPath()
-  ctx.arc(goal.x*SIZE+SIZE/2,goal.y*SIZE+SIZE/2,8,0,Math.PI*2)
-  ctx.fill()
+  // draw fountain or door
+  const imgSize = SIZE * 3
+  const gx = goal.x*SIZE - SIZE
+  const gy = goal.y*SIZE - SIZE
 
-  // player
+  if(door){
+    ctx.drawImage(doorImg, gx, gy, imgSize, imgSize)
+  } else {
+    ctx.drawImage(fountainImg, gx, gy, imgSize, imgSize)
+  }
+
+  // draw player
   ctx.fillStyle="lime"
   ctx.beginPath()
-  ctx.arc(player.x*SIZE+SIZE/2,player.y*SIZE+SIZE/2,6,0,Math.PI*2)
+  ctx.arc(player.x*SIZE + SIZE/2, player.y*SIZE + SIZE/2, 6, 0, Math.PI*2)
   ctx.fill()
 
   requestAnimationFrame(draw)
